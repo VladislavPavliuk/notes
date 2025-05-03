@@ -5,6 +5,7 @@ class Note {
   final String content;
   final DateTime createdAt;
   final DateTime? lastEditedAt;
+  bool isFavorite; // ➕ додано
 
   Note({
     this.id,
@@ -13,6 +14,7 @@ class Note {
     required this.content,
     required this.createdAt,
     this.lastEditedAt,
+    this.isFavorite = false, // ➕ дефолтне значення
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Note {
       'content': content,
       'createdAt': createdAt.toIso8601String(),
       'lastEditedAt': lastEditedAt?.toIso8601String(),
+      'isFavorite': isFavorite ? 1 : 0, // ➕ збереження як int
     };
   }
 
@@ -34,6 +37,7 @@ class Note {
       content: map['content'],
       createdAt: DateTime.parse(map['createdAt']),
       lastEditedAt: map['lastEditedAt'] != null ? DateTime.parse(map['lastEditedAt']) : null,
+      isFavorite: map['isFavorite'] == 1, // ➕ читання як bool
     );
   }
 }

@@ -2,9 +2,13 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import 'database_helper.dart';
+import 'package:flutter/material.dart';
 
-class AuthService {
+class AuthService extends ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  User? _currentUser;
+
+  User? get currentUser => _currentUser;
 
   Future<bool> registerUser(String name, String email, String password) async {
     final db = await _dbHelper.database;
@@ -42,17 +46,12 @@ class AuthService {
       whereArgs: [email],
     );
 
-    if (users.isEmpty) {
-      return false;
-    }
+    if (users.isEmpty) return false;
 
     User user = User.fromMap(users.first);
-
     bool passwordVerified = BCrypt.checkpw(password, user.passwordHash);
 
-    if (!passwordVerified) {
-      return false;
-    }
+    if (!passwordVerified) return false;
 
     await db.update(
       'users',
@@ -64,15 +63,23 @@ class AuthService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', user.id!);
 
+    _currentUser = user;
+    notifyListeners();
+
     return true;
   }
 
   Future<void> logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('userId');
+
+    _currentUser = null;
+    notifyListeners();
   }
 
   Future<User?> getCurrentUser() async {
+    if (_currentUser != null) return _currentUser;
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
@@ -88,7 +95,8 @@ class AuthService {
 
     if (users.isEmpty) return null;
 
-    return User.fromMap(users.first);
+    _currentUser = User.fromMap(users.first);
+    return _currentUser;
   }
 
   Future<void> deleteAccount() async {
@@ -106,6 +114,8 @@ class AuthService {
     );
 
     await prefs.remove('userId');
+    _currentUser = null;
+    notifyListeners();
   }
 
   Future<bool> verifyPassword(int userId, String password) async {
@@ -118,12 +128,9 @@ class AuthService {
       whereArgs: [userId],
     );
 
-    if (users.isEmpty) {
-      return false;
-    }
+    if (users.isEmpty) return false;
 
     String storedHash = users.first['passwordHash'];
-
     return BCrypt.checkpw(password, storedHash);
   }
 }

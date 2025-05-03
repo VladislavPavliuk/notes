@@ -58,4 +58,19 @@ class NoteService {
       whereArgs: [id],
     );
   }
+
+  // ➕ нова функція для зміни isFavorite
+  Future<int> toggleFavorite(int noteId, bool isFavorite) async {
+    final db = await _dbHelper.database;
+
+    return await db.update(
+      'notes',
+      {
+        'isFavorite': isFavorite ? 1 : 0,
+        'lastEditedAt': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [noteId],
+    );
+  }
 }

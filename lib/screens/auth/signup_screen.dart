@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../notes/notes_list_screen.dart';
+import '../../widgets/stateful_button.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -16,8 +17,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  bool _isLoading = false;
   String? _errorMessage;
+  ButtonState _buttonState = ButtonState.idle;
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
@@ -49,7 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _register() async {
     setState(() {
-      _isLoading = true;
+      _buttonState = ButtonState.loading;
       _errorMessage = null;
     });
 
@@ -60,10 +61,6 @@ class _SignupScreenState extends State<SignupScreen> {
       _passwordController.text,
     );
 
-    setState(() {
-      _isLoading = false;
-    });
-
     if (success) {
       bool loginSuccess = await authService.loginUser(
         _emailController.text.trim(),
@@ -71,6 +68,13 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       if (loginSuccess) {
+        setState(() {
+          _buttonState = ButtonState.success;
+        });
+
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const NotesListScreen()),
@@ -79,7 +83,14 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } else {
       setState(() {
+        _buttonState = ButtonState.error;
         _errorMessage = 'Email already in use';
+      });
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      setState(() {
+        _buttonState = ButtonState.idle;
       });
     }
   }
@@ -155,19 +166,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 16.0),
               ],
 
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _register();
-                    }
-                  },
-                  child: const Text("Sign up"),
-                ),
+              StatefulButton(
+                text: "Sign up",
+                state: _buttonState,
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _register();
+                  }
+                },
               ),
               const SizedBox(height: 16.0),
 

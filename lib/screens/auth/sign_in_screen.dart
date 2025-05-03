@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../notes/notes_list_screen.dart';
 import './signup_screen.dart';
+import '../../widgets/stateful_button.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -16,8 +17,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;
   String? _errorMessage;
+  ButtonState _buttonState = ButtonState.idle;
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
@@ -42,7 +43,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _login() async {
     setState(() {
-      _isLoading = true;
+      _buttonState = ButtonState.loading;
       _errorMessage = null;
     });
 
@@ -52,18 +53,28 @@ class _SignInScreenState extends State<SignInScreen> {
       _passwordController.text,
     );
 
-    setState(() {
-      _isLoading = false;
-    });
-
     if (success) {
+      setState(() {
+        _buttonState = ButtonState.success;
+      });
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const NotesListScreen()),
       );
     } else {
       setState(() {
+        _buttonState = ButtonState.error;
         _errorMessage = 'Invalid email or password';
+      });
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      setState(() {
+        _buttonState = ButtonState.idle;
       });
     }
   }
@@ -85,7 +96,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
               ),
               const SizedBox(height: 24.0),
-
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -95,7 +105,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 validator: _validateEmail,
               ),
               const SizedBox(height: 16.0),
-
               TextFormField(
                 controller: _passwordController,
                 obscureText: true,
@@ -106,7 +115,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 validator: _validatePassword,
               ),
               const SizedBox(height: 16.0),
-
               if (_errorMessage != null) ...[
                 Text(
                   _errorMessage!,
@@ -114,23 +122,16 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 const SizedBox(height: 16.0),
               ],
-
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _login();
-                    }
-                  },
-                  child: const Text("Log in"),
-                ),
+              StatefulButton(
+                text: "Log in",
+                state: _buttonState,
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _login();
+                  }
+                },
               ),
               const SizedBox(height: 16.0),
-
               SizedBox(
                 width: double.infinity,
                 height: 48,

@@ -91,59 +91,66 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
+    return "${date.day.toString().padLeft(2, '0')}/"
+        "${date.month.toString().padLeft(2, '0')}/"
+        "${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Note Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: _navigateToEditNote,
-            tooltip: 'Edit Note',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _deleteNote,
-            tooltip: 'Delete Note',
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-          ? Center(
-        child: Text(
-          _errorMessage!,
-          style: const TextStyle(color: Colors.red, fontSize: 18),
-          textAlign: TextAlign.center,
-        ),
-      )
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            Text(
-              _note!.title.isEmpty ? 'Untitled' : _note!.title,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(), // for future keyboard dismiss
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Note Details'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: _navigateToEditNote,
+              tooltip: 'Edit Note',
             ),
-            const SizedBox(height: 8.0),
-            Text(
-              _formatDate(_note!.lastEditedAt ?? _note!.createdAt),
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              _note!.content,
-              style: const TextStyle(fontSize: 18),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: _deleteNote,
+              tooltip: 'Delete Note',
             ),
           ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+            ? Center(
+          child: Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red, fontSize: 18),
+            textAlign: TextAlign.center,
+          ),
+        )
+            : Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView(
+            children: [
+              Text(
+                _note!.title.trim().isEmpty ? 'Untitled' : _note!.title,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Text(
+                _formatDate(_note!.lastEditedAt ?? _note!.createdAt),
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(height: 16.0),
+              SelectableText(
+                _note!.content.trim().isEmpty
+                    ? '[No content]'
+                    : _note!.content,
+                style: const TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
         ),
       ),
     );

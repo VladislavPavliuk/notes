@@ -48,6 +48,7 @@ class DatabaseHelper {
         content TEXT NOT NULL,
         createdAt TEXT NOT NULL,
         lastEditedAt TEXT,
+        isFavorite INTEGER DEFAULT 0,
         FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
       )
     ''');
